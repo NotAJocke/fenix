@@ -44,6 +44,9 @@ impl std::fmt::Display for Coord {
     }
 }
 
+pub const STARTING_FEN: &str =
+    "sssssss2/ssssss3/sssss3S/ssss3SS/sss3SSS/ss3SSSS/s3SSSSS/3SSSSSS/2SSSSSSS";
+
 #[derive(Debug, Clone)]
 pub struct Board {
     pub squares: [Square; 81],
@@ -58,6 +61,62 @@ impl Default for Board {
 }
 
 impl Board {
+    pub fn from_fen(fen: &str) -> Result<Self> {
+        let mut board = Self::default();
+        let mut i = 0;
+
+        for line in fen.split("/") {
+            for c in line.chars() {
+                if i >= 81 {
+                    return Err("FEN string exceeds board capacity".into());
+                }
+
+                if let Some(sq) = Square::from_char(c) {
+                    board.squares[i] = sq;
+                    i += 1;
+                } else if let Some(n) = c.to_digit(10) {
+                    i += n as usize;
+                } else {
+                    return Err(format!("Invalid character in FEN: {c}").into());
+                }
+            }
+        }
+
+        if i != 81 {
+            return Err(format!("FEN provided {} squares, but 81 are required", i).into());
+        }
+
+        Ok(board)
+    }
+
+    pub fn to_fen(&self) -> String {
+        let mut fen = String::new();
+        for row in 0..9 {
+            let mut empty_count = 0;
+            for col in 0..9 {
+                let coord = Coord::from_xy(col, row).unwrap();
+                let sq = self.at(coord);
+
+                if sq.is_empty() {
+                    empty_count += 1;
+                } else {
+                    if empty_count > 0 {
+                        fen.push_str(&empty_count.to_string());
+                        empty_count = 0;
+                    }
+                    fen.push(sq.to_char());
+                }
+            }
+            if empty_count > 0 {
+                fen.push_str(&empty_count.to_string());
+            }
+            if row < 8 {
+                fen.push('/');
+            }
+        }
+        fen
+    }
+
     pub fn at(&self, coord: Coord) -> Square {
         unsafe { *self.squares.get_unchecked(coord.0 as usize) }
     }

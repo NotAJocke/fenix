@@ -19,14 +19,17 @@ use crate::Result;
 pub struct Square(pub(crate) u8);
 
 impl Square {
-    pub(crate) const EMPTY: Square = Square(0);
+    pub const EMPTY: Square = Square(0);
 
-    const TYPE_MASK: u8 = 0b011;
-    const COLOR_MASK: u8 = 0b100;
+    pub const TYPE_MASK: u8 = 0b011;
+    pub const COLOR_MASK: u8 = 0b100;
 
-    const SOLDIER: u8 = 0b01;
-    const GENERAL: u8 = 0b10;
-    const KING: u8 = 0b11;
+    pub const SOLDIER: u8 = 0b01;
+    pub const GENERAL: u8 = 0b10;
+    pub const KING: u8 = 0b11;
+
+    pub const RED: u8 = 0;
+    pub const BLACK: u8 = 0b100;
 
     pub fn new(byte: u8) -> Result<Self> {
         if byte > 7 || byte == 4 {
@@ -34,6 +37,39 @@ impl Square {
         }
 
         Ok(Self(byte))
+    }
+
+    pub fn from_char(c: char) -> Option<Self> {
+        let color = if c.is_uppercase() {
+            Self::RED
+        } else {
+            Self::BLACK
+        };
+        let piece_type = match c.to_ascii_lowercase() {
+            's' => Self::SOLDIER,
+            'g' => Self::GENERAL,
+            'k' => Self::KING,
+            _ => return None,
+        };
+        Some(Square(color | piece_type))
+    }
+
+    pub fn to_char(self) -> char {
+        if self.is_empty() {
+            return '.';
+        }
+
+        let p_type = self.piece_type();
+        let is_red = self.color() == Self::RED;
+
+        let c = match p_type {
+            Self::SOLDIER => 's',
+            Self::GENERAL => 'g',
+            Self::KING => 'k',
+            _ => unreachable!(),
+        };
+
+        if is_red { c.to_ascii_uppercase() } else { c }
     }
 
     pub fn is_empty(self) -> bool {
