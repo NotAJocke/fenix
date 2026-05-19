@@ -1,3 +1,4 @@
+pub mod action;
 pub mod board;
 mod error;
 pub mod square;

@@ -37,6 +37,7 @@ impl Coord {
         Self::from_xy(nx as u8, ny as u8).ok()
     }
 }
+
 impl std::fmt::Display for Coord {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let (x, y) = self.xy();
@@ -71,7 +72,7 @@ impl Board {
                     return Err("FEN string exceeds board capacity".into());
                 }
 
-                if let Some(sq) = Square::from_char(c) {
+                if let Ok(sq) = Square::from_char(c) {
                     board.squares[i] = sq;
                     i += 1;
                 } else if let Some(n) = c.to_digit(10) {

@@ -31,7 +31,7 @@ impl Square {
     pub const RED: u8 = 0;
     pub const BLACK: u8 = 0b100;
 
-    pub fn new(byte: u8) -> Result<Self> {
+    pub fn from_byte(byte: u8) -> Result<Self> {
         if byte > 7 || byte == 4 {
             return Err("Piece not exist".into());
         }
@@ -39,7 +39,11 @@ impl Square {
         Ok(Self(byte))
     }
 
-    pub fn from_char(c: char) -> Option<Self> {
+    pub fn new(color: u8, kind: u8) -> Result<Self> {
+        Self::from_byte(color | kind)
+    }
+
+    pub fn from_char(c: char) -> Result<Self> {
         let color = if c.is_uppercase() {
             Self::RED
         } else {
@@ -49,9 +53,9 @@ impl Square {
             's' => Self::SOLDIER,
             'g' => Self::GENERAL,
             'k' => Self::KING,
-            _ => return None,
+            _ => return Err("Unsupported piece type".into()),
         };
-        Some(Square(color | piece_type))
+        Ok(Square(color | piece_type))
     }
 
     pub fn to_char(self) -> char {
@@ -59,7 +63,7 @@ impl Square {
             return '.';
         }
 
-        let p_type = self.piece_type();
+        let p_type = self.kind();
         let is_red = self.color() == Self::RED;
 
         let c = match p_type {
@@ -76,7 +80,7 @@ impl Square {
         self.0 == 0
     }
 
-    pub fn piece_type(self) -> u8 {
+    pub fn kind(self) -> u8 {
         self.0 & Self::TYPE_MASK
     }
 
@@ -89,7 +93,7 @@ impl Square {
             return None;
         }
 
-        let next_type = match self.piece_type() {
+        let next_type = match self.kind() {
             Self::SOLDIER => Self::GENERAL,
             Self::GENERAL => Self::KING,
             _ => return None, // Already King
