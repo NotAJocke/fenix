@@ -23,7 +23,9 @@ fn main() -> Result<()> {
 
     println!("{board}");
 
-    let actions = actions_from(&board, Coord::from_xy(3, 4).unwrap());
+    let mut actions = Vec::new();
+    actions_from(&board, Coord::from_xy(3, 4).unwrap(), &mut actions);
+
     for action in actions {
         println!("{action}");
     }

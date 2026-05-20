@@ -61,20 +61,19 @@ impl std::fmt::Display for Action {
     }
 }
 
-pub fn actions_from(board: &Board, from: Coord) -> Vec<Action> {
+pub fn actions_from(board: &Board, from: Coord, actions: &mut Vec<Action>) {
     match board.at(from).kind() {
-        Square::SOLDIER => soldier_candidates(board, from),
-        Square::GENERAL => general_candidates(board, from),
-        Square::KING => king_candidates(board, from),
+        Square::SOLDIER => soldier_candidates(board, from, actions),
+        Square::GENERAL => general_candidates(board, from, actions),
+        Square::KING => king_candidates(board, from, actions),
         _ => unreachable!("No other piece type exists."),
     }
 }
 
-fn soldier_candidates(board: &Board, from: Coord) -> Vec<Action> {
+fn soldier_candidates(board: &Board, from: Coord, actions: &mut Vec<Action>) {
     let directions: [(i8, i8); 4] = [(-1, 0), (1, 0), (0, -1), (0, 1)];
     let self_piece = board.at(from);
 
-    let mut actions = Vec::with_capacity(4);
     for (dx, dy) in directions {
         let target = from.checked_offset(dx, dy);
 
@@ -111,15 +110,12 @@ fn soldier_candidates(board: &Board, from: Coord) -> Vec<Action> {
             });
         }
     }
-
-    actions
 }
 
-fn general_candidates(board: &Board, from: Coord) -> Vec<Action> {
+fn general_candidates(board: &Board, from: Coord, actions: &mut Vec<Action>) {
     let directions: [(i8, i8); 4] = [(-1, 0), (1, 0), (0, -1), (0, 1)];
     let self_piece = board.at(from);
 
-    let mut actions = Vec::new();
     for (dx, dy) in directions {
         let mut maybe_target = from.checked_offset(dx, dy);
         let mut capturing = None;
@@ -163,11 +159,9 @@ fn general_candidates(board: &Board, from: Coord) -> Vec<Action> {
             break;
         }
     }
-
-    actions
 }
 
-fn king_candidates(board: &Board, from: Coord) -> Vec<Action> {
+fn king_candidates(board: &Board, from: Coord, actions: &mut Vec<Action>) {
     let directions: [(i8, i8); 8] = [
         (-1, -1),
         (0, -1),
@@ -180,7 +174,6 @@ fn king_candidates(board: &Board, from: Coord) -> Vec<Action> {
     ];
     let self_piece = board.at(from);
 
-    let mut actions = Vec::with_capacity(8);
     for (dx, dy) in directions {
         let target = from.checked_offset(dx, dy);
 
@@ -206,5 +199,4 @@ fn king_candidates(board: &Board, from: Coord) -> Vec<Action> {
             });
         }
     }
-    actions
 }
