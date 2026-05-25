@@ -9,7 +9,7 @@ pub struct MoveIntent {
     pub to: Square,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub enum Action {
     Move {
         from: Coord,
@@ -18,7 +18,7 @@ pub enum Action {
     Upgrade {
         from: Coord,
         to: Coord,
-        upgrade: Square,
+        upgrade: u8,
     },
     Capture {
         from: Coord,
@@ -94,7 +94,7 @@ fn soldier_candidates(board: &Board, from: Coord, actions: &mut Vec<Action>) {
             actions.push(Action::Upgrade {
                 from,
                 to: target,
-                upgrade: upgraded,
+                upgrade: upgraded.kind(),
             });
             continue;
         }

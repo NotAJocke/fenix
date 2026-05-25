@@ -28,6 +28,10 @@ impl Square {
     pub const GENERAL: u8 = 0b10;
     pub const KING: u8 = 0b11;
 
+    pub const SOLDIER_INDEX: usize = 0;
+    pub const GENERAL_INDEX: usize = 1;
+    pub const KING_INDEX: usize = 2;
+
     pub const RED: u8 = 0;
     pub const BLACK: u8 = 0b100;
 
