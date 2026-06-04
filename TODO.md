@@ -8,5 +8,8 @@
 - [ ] Threefold repetition draw (rules 11-12): in the game engine too
 ### Doing
 - [ ] Mandatory captures (rule 6)
+        Generate all -> if has capture available 
+        -> if action is capture -> else not
+        
 - [ ] Chain capture (rule 6): must continue capturing until not possible anymore. 
 ### Done

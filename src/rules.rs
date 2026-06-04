@@ -18,10 +18,6 @@ pub fn is_legal(game: &Game, action: Action) -> bool {
     rules.iter().all(|f| f(game, action))
 }
 
-/// This can be used directly to generate legals for performance
-/// reason
-pub fn generate_legals() {}
-
 // HELPERS \\
 fn is_setup_phase(game: &Game) -> bool {
     game.turn_count < 10

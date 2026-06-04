@@ -1,8 +1,8 @@
 use fenix2::{
     Result,
-    action::actions_from,
-    board::{self, Board, Coord},
-    square::Square,
+    action::action_for,
+    board::{self, Board},
+    game::Player,
 };
 
 fn main() -> Result<()> {
@@ -21,7 +21,12 @@ fn main() -> Result<()> {
     //     Square::new(Square::BLACK, Square::SOLDIER)?,
     // );
 
-    println!("{board}");
+    // println!("{board}");
+
+    let mut actions = Vec::new();
+    action_for(&board, Player::Red, &mut actions);
+
+    // dbg!(actions);
 
     Ok(())
 }

@@ -42,6 +42,7 @@ pub struct Game {
     pub(crate) history: Vec<Action>,
     pub(crate) active_capture: Option<CaptureSeq>,
     pub(crate) lost_general_last_round: bool,
+    pub(crate) available_actions: Vec<Action>,
 }
 
 impl Default for Game {
@@ -54,10 +55,7 @@ impl Default for Game {
             history: Vec::new(),
             active_capture: None,
             lost_general_last_round: false,
+            available_actions: Vec::new(),
         }
     }
-}
-
-impl Game {
-    pub fn try_apply_intent(&mut self, intent: MoveIntent) {}
 }

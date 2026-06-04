@@ -1,5 +1,6 @@
 use crate::{
     board::{Board, Coord},
+    game::Player,
     square::Square,
 };
 
@@ -61,12 +62,24 @@ impl std::fmt::Display for Action {
     }
 }
 
+pub fn action_for(board: &Board, player: Player, actions: &mut Vec<Action>) {
+    board.squares.iter().enumerate().for_each(|(i, &square)| {
+        if square.is_empty() || square.color() != player as u8 {
+            return;
+        }
+
+        let coord =
+            Coord::new(i as u8).expect("Iterate through board squares cannot be out of bounds.");
+        actions_from(board, coord, actions);
+    });
+}
+
 pub fn actions_from(board: &Board, from: Coord, actions: &mut Vec<Action>) {
     match board.at(from).kind() {
         Square::SOLDIER => soldier_candidates(board, from, actions),
         Square::GENERAL => general_candidates(board, from, actions),
         Square::KING => king_candidates(board, from, actions),
-        _ => unreachable!("No other piece type exists."),
+        _ => return,
     }
 }
 
