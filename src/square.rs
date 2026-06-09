@@ -92,6 +92,15 @@ impl Square {
         self.0 & Self::COLOR_MASK
     }
 
+    pub fn weight(self) -> u8 {
+        match self.kind() {
+            Self::SOLDIER => 1,
+            Self::GENERAL => 2,
+            Self::KING => 3,
+            _ => 0,
+        }
+    }
+
     pub fn upgraded(self) -> Option<Self> {
         if self.is_empty() {
             return None;

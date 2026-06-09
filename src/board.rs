@@ -1,7 +1,7 @@
 use crate::Result;
 use crate::square::Square;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Coord(u8);
 
 impl Coord {

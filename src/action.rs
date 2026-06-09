@@ -10,7 +10,7 @@ pub struct MoveIntent {
     pub to: Square,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Action {
     Move {
         from: Coord,
