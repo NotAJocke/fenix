@@ -1,7 +1,7 @@
 use std::io::{self, Write};
 
 use anyhow::Result;
-use fenix2::{board::Coord, game::Game};
+use fenix::{Coord, Game};
 
 fn read_coord(label: &str) -> Result<Coord> {
     print!("{}", label);
@@ -19,10 +19,10 @@ fn main() {
     let mut game = Game::default();
 
     loop {
-        println!("{}", game.board);
+        println!("{}", game.board());
         println!(
             "Turn {} — {:?} to play ({:?})",
-            game.turn_count, game.side_to_play, game.phase
+            game.turn_count(), game.side_to_play(), game.phase()
         );
 
         let legals = game.legal_actions();
@@ -53,9 +53,9 @@ fn main() {
         }
     }
 
-    println!("{}", game.board);
+    println!("{}", game.board());
     println!(
         "Game over after {} turns: {:?}",
-        game.turn_count, game.phase
+        game.turn_count(), game.phase()
     );
 }

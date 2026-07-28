@@ -53,13 +53,13 @@ pub enum WinReason {
 }
 
 pub struct Game {
-    pub board: Board,
-    pub turn_count: u32,
-    pub side_to_play: Player,
-    pub phase: GamePhase,
-    pub history: Vec<u64>,
-    pub king_was_captured: bool,
-    pub general_was_captured: bool,
+    board: Board,
+    turn_count: u32,
+    side_to_play: Player,
+    phase: GamePhase,
+    history: Vec<u64>,
+    king_was_captured: bool,
+    general_was_captured: bool,
 }
 
 impl Default for Game {
@@ -102,6 +102,22 @@ impl Game {
         self.apply_action(action);
 
         Ok(action)
+    }
+
+    pub fn board(&self) -> &Board {
+        &self.board
+    }
+
+    pub fn turn_count(&self) -> u32 {
+        self.turn_count
+    }
+
+    pub fn side_to_play(&self) -> Player {
+        self.side_to_play
+    }
+
+    pub fn phase(&self) -> &GamePhase {
+        &self.phase
     }
 
     fn apply_action(&mut self, action: Action) {
@@ -329,9 +345,9 @@ mod tests {
             .unwrap();
 
         // After capture: side flips to Black
-        assert_eq!(game.side_to_play, Player::Black);
+        assert_eq!(game.side_to_play(), Player::Black);
         // Phase should be ReconstructKing
-        assert!(matches!(game.phase, GamePhase::ReconstructKing));
+        assert!(matches!(game.phase(), GamePhase::ReconstructKing));
 
         // Black should have at least one King-Upgrade legal
         let actions = game.legal_actions();
@@ -348,13 +364,13 @@ mod tests {
             .unwrap();
 
         // (3,1) should now be a Black King
-        let king_sq = game.board.at(Coord::new(12).unwrap());
+        let king_sq = game.board().at(Coord::new(12).unwrap());
         assert_eq!(king_sq.kind(), Square::KING);
         assert_eq!(king_sq.color(), Square::BLACK);
 
         // Turn should be Red again, phase Normal
-        assert_eq!(game.side_to_play, Player::Red);
-        assert!(matches!(game.phase, GamePhase::Normal));
+        assert_eq!(game.side_to_play(), Player::Red);
+        assert!(matches!(game.phase(), GamePhase::Normal));
     }
 
     /// Red captures Black's King but Black has no Soldier+General pair → GameOver.
@@ -385,9 +401,9 @@ mod tests {
             .unwrap();
 
         // Turn should be Black, phase GameOver — Black can't reconstruct
-        assert_eq!(game.side_to_play, Player::Black);
+        assert_eq!(game.side_to_play(), Player::Black);
         assert!(matches!(
-            game.phase,
+            game.phase(),
             GamePhase::GameOver(GameOutcome::Win {
                 winner: Player::Red,
                 reason: WinReason::KingLost,

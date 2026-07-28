@@ -50,7 +50,7 @@ pub const STARTING_FEN: &str =
 
 #[derive(Debug, Clone, Copy, Hash)]
 pub struct Board {
-    pub squares: [Square; 81],
+    pub(crate) squares: [Square; 81],
 }
 
 impl Default for Board {
