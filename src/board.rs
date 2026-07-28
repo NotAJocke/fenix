@@ -30,7 +30,7 @@ impl Coord {
         let nx = (x as i8).checked_add(dx)?;
         let ny = (y as i8).checked_add(dy)?;
 
-        if nx < 0 || nx >= 9 || ny < 0 || ny >= 9 {
+        if !(0..9).contains(&nx) || !(0..9).contains(&ny) {
             return None;
         }
 

@@ -229,13 +229,15 @@ impl Game {
         actions
             .into_iter()
             // Upgrades are in their own game phases
-            .filter(|a| match a {
-                Action::Move { .. } => true,
-                Action::Upgrade {
-                    upgrade: Square::GENERAL,
-                    ..
-                } => true,
-                _ => false,
+            .filter(|a| {
+                matches!(
+                    a,
+                    Action::Move { .. }
+                        | Action::Upgrade {
+                            upgrade: Square::GENERAL,
+                            ..
+                        }
+                )
             })
             .collect()
     }

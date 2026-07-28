@@ -69,8 +69,13 @@ fn capture_scores(board: &Board, from: Coord, visited: &HashSet<Coord>) -> Vec<(
     let mut scores = Vec::new();
 
     for &capture in &captures {
-        if let Action::Capture { from: cap_from, to: cap_to, captured } = capture {
-            let new_board = board.clone().move_piece(cap_from, cap_to).remove_piece(captured);
+        if let Action::Capture {
+            from: cap_from,
+            to: cap_to,
+            captured,
+        } = capture
+        {
+            let new_board = board.move_piece(cap_from, cap_to).remove_piece(captured);
             let weight = board.at(captured).weight() as u32;
 
             let mut new_visited = visited.clone();
@@ -143,12 +148,12 @@ mod tests {
     #[test]
     fn plan_md_example() {
         let mut board = Board::default();
-        board.squares[40] = make_piece(Square::RED, Square::GENERAL);    // A
-        board.squares[39] = make_piece(Square::BLACK, Square::KING);     // C
-        board.squares[37] = make_piece(Square::BLACK, Square::SOLDIER);  // D
-        board.squares[29] = make_piece(Square::BLACK, Square::SOLDIER);  // E
-        board.squares[31] = make_piece(Square::BLACK, Square::SOLDIER);  // B
-        board.squares[13] = make_piece(Square::BLACK, Square::SOLDIER);  // F
+        board.squares[40] = make_piece(Square::RED, Square::GENERAL); // A
+        board.squares[39] = make_piece(Square::BLACK, Square::KING); // C
+        board.squares[37] = make_piece(Square::BLACK, Square::SOLDIER); // D
+        board.squares[29] = make_piece(Square::BLACK, Square::SOLDIER); // E
+        board.squares[31] = make_piece(Square::BLACK, Square::SOLDIER); // B
+        board.squares[13] = make_piece(Square::BLACK, Square::SOLDIER); // F
 
         let opts = capture_options(&board, Player::Red);
 
@@ -169,12 +174,12 @@ mod tests {
     #[test]
     fn strict_max_weight_picks_heavier_path() {
         let mut board = Board::default();
-        board.squares[40] = make_piece(Square::RED, Square::GENERAL);     // A
+        board.squares[40] = make_piece(Square::RED, Square::GENERAL); // A
         // Path A (up): King at (4,3), General at (4,1)
-        board.squares[31] = make_piece(Square::BLACK, Square::KING);      // weight 3
-        board.squares[13] = make_piece(Square::BLACK, Square::GENERAL);   // weight 2
+        board.squares[31] = make_piece(Square::BLACK, Square::KING); // weight 3
+        board.squares[13] = make_piece(Square::BLACK, Square::GENERAL); // weight 2
         // Path B (left): King at (3,4)
-        board.squares[39] = make_piece(Square::BLACK, Square::KING);      // weight 3
+        board.squares[39] = make_piece(Square::BLACK, Square::KING); // weight 3
 
         let opts = capture_options(&board, Player::Red);
 

@@ -73,7 +73,7 @@ pub fn actions_from(board: &Board, from: Coord, actions: &mut Vec<Action>) {
         Square::SOLDIER => soldier_candidates(board, from, actions),
         Square::GENERAL => general_candidates(board, from, actions),
         Square::KING => king_candidates(board, from, actions),
-        _ => return,
+        _ => (),
     }
 }
 
