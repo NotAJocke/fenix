@@ -3,7 +3,7 @@ use std::hash::{DefaultHasher, Hash, Hasher};
 use anyhow::{Result, bail};
 
 use crate::{
-    action::{Action, action_for},
+    action::{Action, actions_for},
     board::{Board, Coord},
     capture::{capture_options, capture_options_from},
     square::Square,
@@ -190,7 +190,7 @@ impl Game {
 
     fn setup_actions(&self) -> Vec<Action> {
         let mut actions = Vec::new();
-        action_for(&self.board, self.side_to_play, &mut actions);
+        actions_for(&self.board, self.side_to_play, &mut actions);
 
         actions
             .into_iter()
@@ -207,7 +207,7 @@ impl Game {
         }
 
         let mut actions = Vec::new();
-        action_for(&self.board, self.side_to_play, &mut actions);
+        actions_for(&self.board, self.side_to_play, &mut actions);
 
         actions
             .into_iter()
@@ -225,7 +225,7 @@ impl Game {
 
         let mut actions = Vec::new();
 
-        action_for(&self.board, self.side_to_play, &mut actions);
+        actions_for(&self.board, self.side_to_play, &mut actions);
         actions
             .into_iter()
             // Upgrades are in their own game phases
@@ -245,7 +245,7 @@ impl Game {
     fn reconstruct_king(&self) -> Vec<Action> {
         let mut actions = Vec::new();
 
-        action_for(&self.board, self.side_to_play, &mut actions);
+        actions_for(&self.board, self.side_to_play, &mut actions);
 
         actions
             .into_iter()

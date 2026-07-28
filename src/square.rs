@@ -16,7 +16,7 @@ use anyhow::{Result, bail};
 ///
 /// Ex: 0b00000101 = 5 -> Black soldier
 #[derive(Debug, Clone, Copy, Hash)]
-pub struct Square(pub(crate) u8);
+pub struct Square(u8);
 
 impl Square {
     pub const EMPTY: Square = Square(0);

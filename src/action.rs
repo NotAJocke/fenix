@@ -56,7 +56,7 @@ impl std::fmt::Display for Action {
     }
 }
 
-pub fn action_for(board: &Board, player: Player, actions: &mut Vec<Action>) {
+pub fn actions_for(board: &Board, player: Player, actions: &mut Vec<Action>) {
     board.squares.iter().enumerate().for_each(|(i, &square)| {
         if square.is_empty() || square.color() != player as u8 {
             return;
