@@ -4,12 +4,6 @@ use crate::{
     square::Square,
 };
 
-#[derive(Debug, Copy, Clone)]
-pub struct MoveIntent {
-    pub from: Square,
-    pub to: Square,
-}
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Action {
     Move {

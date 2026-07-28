@@ -1,4 +1,4 @@
-use crate::Result;
+use anyhow::{Result, bail};
 
 /// A square is either a piece from the red or black or nothing at all.
 ///
@@ -15,7 +15,7 @@ use crate::Result;
 /// 1 -> black
 ///
 /// Ex: 0b00000101 = 5 -> Black soldier
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Hash)]
 pub struct Square(pub(crate) u8);
 
 impl Square {
@@ -28,16 +28,17 @@ impl Square {
     pub const GENERAL: u8 = 0b10;
     pub const KING: u8 = 0b11;
 
-    pub const SOLDIER_INDEX: usize = 0;
-    pub const GENERAL_INDEX: usize = 1;
-    pub const KING_INDEX: usize = 2;
+    // TODO: remove dead code
+    // pub const SOLDIER_INDEX: usize = 0;
+    // pub const GENERAL_INDEX: usize = 1;
+    // pub const KING_INDEX: usize = 2;
 
     pub const RED: u8 = 0;
     pub const BLACK: u8 = 0b100;
 
     pub fn from_byte(byte: u8) -> Result<Self> {
         if byte > 7 || byte == 4 {
-            return Err("Piece not exist".into());
+            bail!("Piece not exist");
         }
 
         Ok(Self(byte))
@@ -57,7 +58,7 @@ impl Square {
             's' => Self::SOLDIER,
             'g' => Self::GENERAL,
             'k' => Self::KING,
-            _ => return Err("Unsupported piece type".into()),
+            _ => bail!("Unsupported piece type"),
         };
         Ok(Square(color | piece_type))
     }

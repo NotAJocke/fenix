@@ -1,32 +1,24 @@
-use fenix2::{
-    Result,
-    action::action_for,
-    board::{self, Board},
-    game::Player,
-};
+use fenix2::game::Game;
 
-fn main() -> Result<()> {
-    let board = Board::from_fen(board::STARTING_FEN).unwrap();
-    // .place_piece(
-    //     Coord::from_xy(4, 4)?,
-    //     Square::new(Square::BLACK, Square::SOLDIER)?,
-    // )
-    // .place_piece(Coord::from_xy(3, 4)?, Square::from_char('g')?)
-    // .place_piece(
-    //     Coord::from_xy(5, 4)?,
-    //     Square::new(Square::RED, Square::SOLDIER)?,
-    // )
-    // .place_piece(
-    //     Coord::from_xy(7, 4)?,
-    //     Square::new(Square::BLACK, Square::SOLDIER)?,
-    // );
+fn main() {
+    let mut game = Game::default();
 
-    // println!("{board}");
+    loop {
+        let legals = game.legal_actions();
 
-    let mut actions = Vec::new();
-    action_for(&board, Player::Red, &mut actions);
+        if legals.is_empty() {
+            break;
+        }
 
-    // dbg!(actions);
+        let idx = fastrand::usize(..legals.len());
+        let action = legals[idx];
+        game.play_move(action.from(), action.to()).unwrap();
 
-    Ok(())
+        if cfg!(debug_assertions) {
+            println!("{}", game.board)
+        }
+    }
+
+    println!("Game ended after {} turns", game.turn_count);
+    println!("Phase: {:?}", game.phase);
 }

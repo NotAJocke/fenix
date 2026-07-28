@@ -1,5 +1,5 @@
-use crate::Result;
 use crate::square::Square;
+use anyhow::{Result, bail};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Coord(u8);
@@ -7,7 +7,7 @@ pub struct Coord(u8);
 impl Coord {
     pub fn new(coord: u8) -> Result<Self> {
         if coord >= 81 {
-            return Err("Out of bounds".into());
+            bail!("Out of bounds");
         }
 
         Ok(Self(coord))
@@ -15,7 +15,7 @@ impl Coord {
 
     pub fn from_xy(x: u8, y: u8) -> Result<Self> {
         if x >= 9 || y >= 9 {
-            return Err("Out of bounds".into());
+            bail!("Out of bounds");
         }
 
         Ok(Self(y * 9 + x))
@@ -48,7 +48,7 @@ impl std::fmt::Display for Coord {
 pub const STARTING_FEN: &str =
     "sssssss2/ssssss3/sssss3S/ssss3SS/sss3SSS/ss3SSSS/s3SSSSS/3SSSSSS/2SSSSSSS";
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy, Hash)]
 pub struct Board {
     pub squares: [Square; 81],
 }
@@ -62,6 +62,10 @@ impl Default for Board {
 }
 
 impl Board {
+    pub fn starting() -> Self {
+        Self::from_fen(STARTING_FEN).unwrap()
+    }
+
     pub fn from_fen(fen: &str) -> Result<Self> {
         let mut board = Self::default();
         let mut i = 0;
@@ -69,7 +73,7 @@ impl Board {
         for line in fen.split("/") {
             for c in line.chars() {
                 if i >= 81 {
-                    return Err("FEN string exceeds board capacity".into());
+                    bail!("FEN string exceeds board capacity");
                 }
 
                 if let Ok(sq) = Square::from_char(c) {
@@ -78,13 +82,13 @@ impl Board {
                 } else if let Some(n) = c.to_digit(10) {
                     i += n as usize;
                 } else {
-                    return Err(format!("Invalid character in FEN: {c}").into());
+                    bail!(format!("Invalid character in FEN: {c}"));
                 }
             }
         }
 
         if i != 81 {
-            return Err(format!("FEN provided {} squares, but 81 are required", i).into());
+            bail!(format!("FEN provided {} squares, but 81 are required", i));
         }
 
         Ok(board)
