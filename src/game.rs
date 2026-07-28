@@ -10,7 +10,7 @@ use crate::{
 };
 
 #[repr(u8)]
-#[derive(Debug, Clone, Copy, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Player {
     Red = 0,
     Black = 0b100,
@@ -291,5 +291,105 @@ impl Game {
             Square::KING => kings == 0,
             _ => true,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Red captures Black's King, Black must reconstruct.
+    #[test]
+    fn capture_king_triggers_reconstruct() {
+        let mut board = Board::default();
+
+        // Red General at (4,4) = 40
+        board.squares[40] = Square::new(Square::RED, Square::GENERAL).unwrap();
+        // Black King at (3,4) = 39, landing at (2,4) = 38
+        board.squares[39] = Square::new(Square::BLACK, Square::KING).unwrap();
+        // Black General at (3,1) = 12 for reconstruct
+        board.squares[12] = Square::new(Square::BLACK, Square::GENERAL).unwrap();
+        // Black Soldier at (3,2) = 21 — adjacent below General
+        board.squares[21] = Square::new(Square::BLACK, Square::SOLDIER).unwrap();
+
+        let mut game = Game {
+            board,
+            turn_count: 10,
+            side_to_play: Player::Red,
+            phase: GamePhase::Normal,
+            history: vec![],
+            king_was_captured: false,
+            general_was_captured: false,
+        };
+
+        // Red General at 40 captures Black King at 39, lands at 38
+        game.play_move(Coord::new(40).unwrap(), Coord::new(38).unwrap())
+            .unwrap();
+
+        // After capture: side flips to Black
+        assert_eq!(game.side_to_play, Player::Black);
+        // Phase should be ReconstructKing
+        assert!(matches!(game.phase, GamePhase::ReconstructKing));
+
+        // Black should have at least one King-Upgrade legal
+        let actions = game.legal_actions();
+        assert!(actions.iter().any(|a| matches!(
+            a,
+            Action::Upgrade {
+                upgrade: Square::KING,
+                ..
+            }
+        )));
+
+        // Black reconstructs: Soldier at 21 upgrades General at 12 to King
+        game.play_move(Coord::new(21).unwrap(), Coord::new(12).unwrap())
+            .unwrap();
+
+        // (3,1) should now be a Black King
+        let king_sq = game.board.at(Coord::new(12).unwrap());
+        assert_eq!(king_sq.kind(), Square::KING);
+        assert_eq!(king_sq.color(), Square::BLACK);
+
+        // Turn should be Red again, phase Normal
+        assert_eq!(game.side_to_play, Player::Red);
+        assert!(matches!(game.phase, GamePhase::Normal));
+    }
+
+    /// Red captures Black's King but Black has no Soldier+General pair → GameOver.
+    #[test]
+    fn capture_king_no_reconstruct_loses() {
+        let mut board = Board::default();
+
+        // Red General at (4,4) = 40
+        board.squares[40] = Square::new(Square::RED, Square::GENERAL).unwrap();
+        // Black King at (3,4) = 39
+        board.squares[39] = Square::new(Square::BLACK, Square::KING).unwrap();
+        // Black pieces placed far away so Red General can't chain-capture them
+        board.squares[70] = Square::new(Square::BLACK, Square::SOLDIER).unwrap(); // (7,7)
+        board.squares[71] = Square::new(Square::BLACK, Square::SOLDIER).unwrap(); // (8,7)
+
+        let mut game = Game {
+            board,
+            turn_count: 10,
+            side_to_play: Player::Red,
+            phase: GamePhase::Normal,
+            history: vec![],
+            king_was_captured: false,
+            general_was_captured: false,
+        };
+
+        // Capture King
+        game.play_move(Coord::new(40).unwrap(), Coord::new(38).unwrap())
+            .unwrap();
+
+        // Turn should be Black, phase GameOver — Black can't reconstruct
+        assert_eq!(game.side_to_play, Player::Black);
+        assert!(matches!(
+            game.phase,
+            GamePhase::GameOver(GameOutcome::Win {
+                winner: Player::Red,
+                reason: WinReason::KingLost,
+            })
+        ));
     }
 }
