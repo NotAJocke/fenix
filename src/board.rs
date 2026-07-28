@@ -157,11 +157,17 @@ impl Board {
 
 impl std::fmt::Display for Board {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // column header
+        writeln!(f, "  0  1  2  3  4  5  6  7  8")?;
         for row in 0..9 {
+            write!(f, "{} ", row)?;
             for col in 0..9 {
                 let coord = Coord::from_xy(col, row).unwrap();
                 let square = self.at(coord);
-                write!(f, "{square}")?;
+                write!(f, "{}", square)?;
+                if col < 8 {
+                    write!(f, " ")?;
+                }
             }
             writeln!(f)?;
         }
