@@ -123,7 +123,7 @@ impl Board {
     }
 
     pub fn at(&self, coord: Coord) -> Square {
-        unsafe { *self.squares.get_unchecked(coord.0 as usize) }
+        self.squares[coord.0 as usize]
     }
 
     pub fn is_occupied(&self, coord: Coord) -> bool {
