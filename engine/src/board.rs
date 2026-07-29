@@ -1,4 +1,5 @@
 use crate::square::Square;
+use crate::Action;
 use anyhow::{Result, bail};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -151,6 +152,16 @@ impl Board {
         match square.upgraded() {
             Some(new_piece) => self.place_piece(coord, new_piece),
             None => self,
+        }
+    }
+
+    pub fn apply_action(self, action: &Action) -> Self {
+        match action {
+            Action::Move { from, to } => self.move_piece(*from, *to),
+            Action::Upgrade { from, to, .. } => self.remove_piece(*from).upgrade_piece(*to),
+            Action::Capture { from, to, captured } => {
+                self.remove_piece(*captured).move_piece(*from, *to)
+            }
         }
     }
 }

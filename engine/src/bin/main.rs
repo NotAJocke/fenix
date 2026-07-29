@@ -1,7 +1,8 @@
 use std::io::{self, Write};
 
 use anyhow::Result;
-use fenix::{Coord, Game};
+use fenix::ai::{Ai, Greedy, Minimax};
+use fenix::{Coord, Game, Player};
 
 fn read_coord(label: &str) -> Result<Coord> {
     print!("{}", label);
@@ -18,16 +19,75 @@ fn read_coord(label: &str) -> Result<Coord> {
 fn main() {
     let mut game = Game::default();
 
+    let mut red_ai = false;
+    let mut black_ai = false;
+    let mut depth = 1u32;
+
+    let mut args = std::env::args().skip(1).peekable();
+    while let Some(arg) = args.next() {
+        match arg.as_str() {
+            "--ai" => {
+                let who = args.peek().map(|s| s.as_str());
+                match who {
+                    Some("red") => {
+                        red_ai = true;
+                        args.next();
+                    }
+                    Some("black") => {
+                        black_ai = true;
+                        args.next();
+                    }
+                    Some("both") => {
+                        red_ai = true;
+                        black_ai = true;
+                        args.next();
+                    }
+                    _ => {
+                        red_ai = true;
+                        black_ai = true;
+                    }
+                }
+            }
+            "--depth" => {
+                depth = args
+                    .next()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(1);
+            }
+            _ => {}
+        }
+    }
+
+    let ai: Box<dyn Ai> = if depth > 1 {
+        Box::new(Minimax { depth })
+    } else {
+        Box::new(Greedy)
+    };
+
     loop {
         println!("{}", game.board());
         println!(
             "Turn {} — {:?} to play ({:?})",
-            game.turn_count(), game.side_to_play(), game.phase()
+            game.turn_count(),
+            game.side_to_play(),
+            game.phase()
         );
 
         let legals = game.legal_actions();
         if legals.is_empty() {
             break;
+        }
+
+        let is_ai = match game.side_to_play() {
+            Player::Red => red_ai,
+            Player::Black => black_ai,
+        };
+
+        if is_ai {
+            let action = ai.choose_action(&game);
+            println!("AI plays: {}", action);
+            game.play_move(action.from(), action.to()).unwrap();
+            continue;
         }
 
         loop {
@@ -56,6 +116,7 @@ fn main() {
     println!("{}", game.board());
     println!(
         "Game over after {} turns: {:?}",
-        game.turn_count(), game.phase()
+        game.turn_count(),
+        game.phase()
     );
 }
