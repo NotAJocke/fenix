@@ -4,10 +4,12 @@ use std::{convert::Infallible, sync::Arc};
 use axum::{
     Json, Router,
     extract::State,
-    http::StatusCode,
+    http::{StatusCode, header},
+    response::{Html, IntoResponse},
     response::sse::{Event, KeepAlive, Sse},
     routing::{get, post},
 };
+use fenix::ai::{Ai, Greedy, Minimax};
 use fenix::{
     Action, Coord, DrawReason, Game, GameOutcome, GamePhase, Player, WinReason,
 };
@@ -28,6 +30,16 @@ struct MoveIntent {
     to: (u8, u8),
 }
 
+#[derive(Deserialize)]
+struct AiRequest {
+    #[serde(default = "default_depth")]
+    depth: u32,
+}
+
+fn default_depth() -> u32 {
+    2
+}
+
 #[tokio::main]
 async fn main() {
     let (tx, _rx) = broadcast::channel(16);
@@ -37,8 +49,13 @@ async fn main() {
     }));
 
     let app = Router::new()
+        .route("/", get(index))
+        .route("/style.css", get(stylesheet))
+        .route("/app.js", get(script))
         .route("/state", get(state))
         .route("/move", post(play_move))
+        .route("/new", post(new_game))
+        .route("/ai", post(ai_move))
         .route("/events", get(events))
         .with_state(app_state);
 
@@ -86,6 +103,7 @@ fn state_json(game: &Game) -> Value {
         "turn": turn,
         "phase": phase,
         "outcome": outcome,
+        "turn_count": game.turn_count(),
         "legal_moves": legal_moves,
     })
 }
@@ -112,6 +130,53 @@ fn action_to_json(action: &Action) -> Value {
 
 async fn state(State(state): State<Arc<Mutex<AppState>>>) -> Json<Value> {
     Json(state_json(&state.lock().await.game))
+}
+
+async fn index() -> Html<&'static str> {
+    Html(include_str!("index.html"))
+}
+
+async fn stylesheet() -> impl IntoResponse {
+    ([(header::CONTENT_TYPE, "text/css")], include_str!("style.css"))
+}
+
+async fn script() -> impl IntoResponse {
+    ([(header::CONTENT_TYPE, "application/javascript")], include_str!("app.js"))
+}
+
+async fn new_game(State(state): State<Arc<Mutex<AppState>>>) -> Json<Value> {
+    let mut guard = state.lock().await;
+    guard.game = Game::default();
+    let json = state_json(&guard.game);
+    let _ = guard.tx.send(json.to_string());
+    Json(json)
+}
+
+async fn ai_move(
+    State(state): State<Arc<Mutex<AppState>>>,
+    Json(req): Json<AiRequest>,
+) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
+    let mut guard = state.lock().await;
+    let game = &mut guard.game;
+
+    if matches!(game.phase(), GamePhase::GameOver(_)) || game.legal_actions().is_empty() {
+        return Err((
+            StatusCode::CONFLICT,
+            Json(json!({ "error": "no legal moves" })),
+        ));
+    }
+
+    let ai: Box<dyn Ai> = if req.depth > 1 {
+        Box::new(Minimax { depth: req.depth })
+    } else {
+        Box::new(Greedy)
+    };
+    let action = ai.choose_action(game);
+    game.play_move(action.from(), action.to()).unwrap();
+
+    let json = state_json(game);
+    let _ = guard.tx.send(json.to_string());
+    Ok(Json(json))
 }
 
 async fn play_move(

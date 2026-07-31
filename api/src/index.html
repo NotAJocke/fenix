@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fenix · Strike</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<h1>FENIX<span class="r">·</span>STRIKE</h1>
+<div id="status"><span id="turn"></span><span id="phase"></span></div>
+<div id="board"></div>
+<div id="controls">
+  <button id="btn-hvh" class="active">Human vs Human</button>
+  <button id="btn-ai">vs AI</button>
+  <button id="btn-both">AI vs AI</button>
+  <label>depth <select id="depth"><option value="1">1 fast</option><option value="2" selected>2</option><option value="3">3 slow</option></select></label>
+</div>
+<div id="toast"></div>
+<script src="app.js"></script>
+</body>
+</html>
