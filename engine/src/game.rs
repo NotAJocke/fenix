@@ -58,6 +58,8 @@ pub struct GameState {
     turn_count: u32,
     side_to_play: Player,
     phase: GamePhase,
+    king_taken: bool,
+    general_taken: bool,
 }
 
 impl Default for GameState {
@@ -67,6 +69,8 @@ impl Default for GameState {
             turn_count: 0,
             side_to_play: Player::Red,
             phase: GamePhase::Setup,
+            king_taken: false,
+            general_taken: false,
         }
     }
 }
@@ -103,10 +107,14 @@ impl GameState {
         match action {
             Action::Move { .. } | Action::Upgrade { .. } => {
                 self.board = self.board.apply_action(&action);
-                self.advance_turn(None)
+                self.advance_turn()
             }
             Action::Capture { from, to, captured } => {
-                let piece = self.board.at(captured);
+                match self.board.at(captured).kind() {
+                    Square::KING => self.king_taken = true,
+                    Square::GENERAL => self.general_taken = true,
+                    _ => {}
+                }
                 self.board = self.board.remove_piece(captured).move_piece(from, to);
 
                 if !capture_options_from(&self.board, to).is_empty() {
@@ -114,25 +122,28 @@ impl GameState {
                     return self;
                 }
 
-                self.advance_turn(Some(piece.kind()))
+                self.advance_turn()
             }
         }
     }
 
-    fn advance_turn(mut self, captured_kind: Option<u8>) -> Self {
+    fn advance_turn(mut self) -> Self {
         self.side_to_play = self.side_to_play.next();
         self.turn_count += 1;
 
+        self.phase = if self.king_taken {
+            GamePhase::ReconstructKing
+        } else if self.general_taken {
+            GamePhase::ReconstructGeneral
+        } else {
+            GamePhase::Normal
+        };
+        self.king_taken = false;
+        self.general_taken = false;
+
         if self.turn_count < 10 {
             self.phase = GamePhase::Setup;
-            return self;
         }
-
-        self.phase = match captured_kind {
-            Some(Square::KING) => GamePhase::ReconstructKing,
-            Some(Square::GENERAL) => GamePhase::ReconstructGeneral,
-            _ => GamePhase::Normal,
-        };
 
         self
     }
@@ -356,6 +367,7 @@ mod tests {
                 turn_count: 10,
                 side_to_play: Player::Red,
                 phase: GamePhase::Normal,
+                ..GameState::default()
             },
             history: vec![],
         };
@@ -387,7 +399,6 @@ mod tests {
         let king_sq = game.board().at(Coord::new(12).unwrap());
         assert_eq!(king_sq.kind(), Square::KING);
         assert_eq!(king_sq.color(), Square::BLACK);
-
         // Turn should be Red again, phase Normal
         assert_eq!(game.side_to_play(), Player::Red);
         assert!(matches!(game.phase(), GamePhase::Normal));
@@ -412,6 +423,7 @@ mod tests {
                 turn_count: 10,
                 side_to_play: Player::Red,
                 phase: GamePhase::Normal,
+                ..GameState::default()
             },
             history: vec![],
         };
@@ -429,5 +441,63 @@ mod tests {
                 reason: WinReason::KingLost,
             })
         ));
+    }
+
+    /// Chain captures the King mid-way and then keeps jumping: the King capture
+    /// must still trigger ReconstructKing even though a later piece was captured.
+    #[test]
+    fn chain_capturing_king_midway_triggers_reconstruct_king() {
+        // Row y=4: x4 black General, x5 empty, x6 black King, x7 Red General
+        let mut game = Game {
+            state: GameState {
+                board: Board::from_fen("9/9/9/9/4g1kG1/9/9/9/9").unwrap(),
+                turn_count: 10,
+                side_to_play: Player::Red,
+                phase: GamePhase::Normal,
+                ..GameState::default()
+            },
+            history: vec![],
+        };
+
+        // Jump the King, then continue the chain over the General
+        game.play_move(Coord::from_xy(7, 4).unwrap(), Coord::from_xy(5, 4).unwrap())
+            .unwrap();
+        assert!(matches!(game.phase(), GamePhase::ForcedCapture { .. }));
+        game.play_move(Coord::from_xy(5, 4).unwrap(), Coord::from_xy(3, 4).unwrap())
+            .unwrap();
+
+        // Black has no King and no way to rebuild → Red wins on the spot
+        assert!(matches!(
+            game.phase(),
+            GamePhase::GameOver(GameOutcome::Win {
+                winner: Player::Red,
+                reason: WinReason::KingLost,
+            })
+        ));
+    }
+
+    /// Chain captures a General mid-way: the General-rebuild right survives
+    /// even though the chain ends on a Soldier.
+    #[test]
+    fn chain_capturing_general_midway_triggers_reconstruct_general() {
+        // Black King stays safe at (0,0); chain row: x4 black Soldier, x5 empty,
+        // x6 black General, x7 Red General
+        let mut game = Game {
+            state: GameState {
+                board: Board::from_fen("k8/9/9/9/4s1gG1/9/9/9/9").unwrap(),
+                turn_count: 10,
+                side_to_play: Player::Red,
+                phase: GamePhase::Normal,
+                ..GameState::default()
+            },
+            history: vec![],
+        };
+
+        game.play_move(Coord::from_xy(7, 4).unwrap(), Coord::from_xy(5, 4).unwrap())
+            .unwrap(); // over the General
+        game.play_move(Coord::from_xy(5, 4).unwrap(), Coord::from_xy(3, 4).unwrap())
+            .unwrap(); // over the Soldier
+
+        assert!(matches!(game.phase(), GamePhase::ReconstructGeneral));
     }
 }
