@@ -254,18 +254,10 @@ impl GameState {
     }
 }
 
+#[derive(Default)]
 pub struct Game {
     state: GameState,
     history: Vec<u64>,
-}
-
-impl Default for Game {
-    fn default() -> Self {
-        Self {
-            state: GameState::default(),
-            history: Vec::new(),
-        }
-    }
 }
 
 impl Game {
@@ -316,13 +308,13 @@ impl Game {
             return;
         }
 
-        if let GamePhase::ReconstructKing = self.state.phase {
-            if self.state.legal_actions().is_empty() {
-                self.state.phase = GamePhase::GameOver(GameOutcome::Win {
-                    winner: self.state.side_to_play().next(),
-                    reason: WinReason::KingLost,
-                });
-            }
+        if let GamePhase::ReconstructKing = self.state.phase
+            && self.state.legal_actions().is_empty()
+        {
+            self.state.phase = GamePhase::GameOver(GameOutcome::Win {
+                winner: self.state.side_to_play().next(),
+                reason: WinReason::KingLost,
+            });
         }
 
         let hash = self.state_hash();

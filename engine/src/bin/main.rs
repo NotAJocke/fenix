@@ -49,10 +49,7 @@ fn main() {
                 }
             }
             "--depth" => {
-                depth = args
-                    .next()
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(1);
+                depth = args.next().and_then(|s| s.parse().ok()).unwrap_or(1);
             }
             _ => {}
         }

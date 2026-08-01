@@ -5,14 +5,12 @@ use axum::{
     Json, Router,
     extract::State,
     http::{StatusCode, header},
-    response::{Html, IntoResponse},
     response::sse::{Event, KeepAlive, Sse},
+    response::{Html, IntoResponse},
     routing::{get, post},
 };
 use fenix::ai::{Ai, Greedy, Minimax};
-use fenix::{
-    Action, Coord, DrawReason, Game, GameOutcome, GamePhase, Player, WinReason,
-};
+use fenix::{Action, Coord, DrawReason, Game, GameOutcome, GamePhase, Player, WinReason};
 use serde::Deserialize;
 use serde_json::{Value, json};
 use tokio::sync::{Mutex, broadcast};
@@ -137,11 +135,17 @@ async fn index() -> Html<&'static str> {
 }
 
 async fn stylesheet() -> impl IntoResponse {
-    ([(header::CONTENT_TYPE, "text/css")], include_str!("style.css"))
+    (
+        [(header::CONTENT_TYPE, "text/css")],
+        include_str!("style.css"),
+    )
 }
 
 async fn script() -> impl IntoResponse {
-    ([(header::CONTENT_TYPE, "application/javascript")], include_str!("app.js"))
+    (
+        [(header::CONTENT_TYPE, "application/javascript")],
+        include_str!("app.js"),
+    )
 }
 
 async fn new_game(State(state): State<Arc<Mutex<AppState>>>) -> Json<Value> {

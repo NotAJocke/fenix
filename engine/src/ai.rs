@@ -26,7 +26,12 @@ impl Ai for Minimax {
         let mut best_action = None;
         let mut best_score = i32::MIN;
         for action in state.legal_actions() {
-            let score = -negamax(state.apply_action(action), self.depth - 1, i32::MIN + 1, i32::MAX);
+            let score = -negamax(
+                state.apply_action(action),
+                self.depth - 1,
+                i32::MIN + 1,
+                i32::MAX,
+            );
             if score > best_score {
                 best_score = score;
                 best_action = Some(action);

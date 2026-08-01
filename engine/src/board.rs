@@ -1,5 +1,5 @@
-use crate::square::Square;
 use crate::Action;
+use crate::square::Square;
 use anyhow::{Result, bail};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
